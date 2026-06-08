@@ -33,6 +33,14 @@ public class IotProductDO extends TenantBaseDO {
      */
     private String productKey;
     /**
+     * 产品密钥，用于一型一密动态注册
+     */
+    private String productSecret;
+    /**
+     * 是否开启动态注册
+     */
+    private Boolean registerEnabled;
+    /**
      * 产品分类编号
      * <p>
      * 关联 {@link IotProductCategoryDO#getId()}
@@ -70,18 +78,16 @@ public class IotProductDO extends TenantBaseDO {
      */
     private Integer netType;
     /**
-     * 定位方式
+     * 协议类型
      * <p>
-     * 枚举 {@link cn.iocoder.yudao.module.iot.enums.product.IotLocationTypeEnum}
+     * 枚举 {@link cn.iocoder.yudao.module.iot.core.enums.IotProtocolTypeEnum}
      */
-    private Integer locationType;
+    private String protocolType;
     /**
-     * 数据格式（编解码器类型）
+     * 序列化类型
      * <p>
-     * 字典 {@link cn.iocoder.yudao.module.iot.enums.DictTypeConstants#CODEC_TYPE}
-     *
-     * 目的：用于 gateway-server 解析消息格式
+     * 枚举 {@link cn.iocoder.yudao.module.iot.core.enums.IotSerializeTypeEnum}
      */
-    private String codecType;
+    private String serializeType;
 
 }

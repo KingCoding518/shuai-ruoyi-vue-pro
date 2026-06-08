@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * JSON 工具类
@@ -173,6 +174,41 @@ public class JsonUtils {
         }
     }
 
+    /**
+     * 解析 JSON 字符串成 Map，空字符串或解析失败返回 null
+     *
+     * @param text JSON 字符串
+     * @return Map 对象
+     */
+    public static Map<String, Object> parseMap(String text) {
+        if (StrUtil.isEmpty(text)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(text, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 解析 JSON 字符串成指定类型的对象，如果解析失败，则返回 null
+     *
+     * @param text 字符串
+     * @param clazz 类型
+     * @return 指定类型的对象
+     */
+    public static <T> T parseObjectQuietly(String text, Class<T> clazz) {
+        if (StrUtil.isEmpty(text)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(text, clazz);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     public static <T> List<T> parseArray(String text, Class<T> clazz) {
         if (StrUtil.isEmpty(text)) {
             return new ArrayList<>();
@@ -217,6 +253,14 @@ public class JsonUtils {
         }
     }
 
+    public static String getText(JsonNode node, String fieldName) {
+        if (node == null) {
+            return null;
+        }
+        JsonNode value = node.get(fieldName);
+        return value != null && !value.isNull() ? value.asText() : null;
+    }
+
     public static boolean isJson(String text) {
         return JSONUtil.isTypeJSON(text);
     }
@@ -227,6 +271,55 @@ public class JsonUtils {
      */
     public static boolean isJsonObject(String str) {
         return JSONUtil.isTypeJSONObject(str);
+    }
+
+    /**
+     * 将 Object 转换为目标类型
+     * <p>
+     * 避免先转 jsonString 再 parseObject 的性能损耗
+     *
+     * @param obj   源对象（可以是 Map、POJO 等）
+     * @param clazz 目标类型
+     * @return 转换后的对象
+     */
+    public static <T> T convertObject(Object obj, Class<T> clazz) {
+        if (obj == null) {
+            return null;
+        }
+        if (clazz.isInstance(obj)) {
+            return clazz.cast(obj);
+        }
+        return objectMapper.convertValue(obj, clazz);
+    }
+
+    /**
+     * 将 Object 转换为目标类型（支持泛型）
+     *
+     * @param obj           源对象
+     * @param typeReference 目标类型引用
+     * @return 转换后的对象
+     */
+    public static <T> T convertObject(Object obj, TypeReference<T> typeReference) {
+        if (obj == null) {
+            return null;
+        }
+        return objectMapper.convertValue(obj, typeReference);
+    }
+
+    /**
+     * 将 Object 转换为 List 类型
+     * <p>
+     * 避免先转 jsonString 再 parseArray 的性能损耗
+     *
+     * @param obj   源对象（可以是 List、数组等）
+     * @param clazz 目标元素类型
+     * @return 转换后的 List
+     */
+    public static <T> List<T> convertList(Object obj, Class<T> clazz) {
+        if (obj == null) {
+            return new ArrayList<>();
+        }
+        return objectMapper.convertValue(obj, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
     }
 
 }

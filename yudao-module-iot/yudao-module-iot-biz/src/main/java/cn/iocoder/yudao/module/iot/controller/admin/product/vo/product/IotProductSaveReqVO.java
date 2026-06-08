@@ -1,7 +1,8 @@
 package cn.iocoder.yudao.module.iot.controller.admin.product.vo.product;
 
 import cn.iocoder.yudao.framework.common.validation.InEnum;
-import cn.iocoder.yudao.module.iot.enums.product.IotLocationTypeEnum;
+import cn.iocoder.yudao.module.iot.core.enums.IotProtocolTypeEnum;
+import cn.iocoder.yudao.module.iot.core.enums.IotSerializeTypeEnum;
 import cn.iocoder.yudao.module.iot.enums.product.IotNetTypeEnum;
 import cn.iocoder.yudao.module.iot.enums.product.IotProductDeviceTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -45,12 +46,18 @@ public class IotProductSaveReqVO {
     @InEnum(value = IotNetTypeEnum.class, message = "联网方式必须是 {value}")
     private Integer netType;
 
-    @Schema(description = "定位类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "0")
-    @InEnum(value = IotLocationTypeEnum.class, message = "定位方式必须是 {value}")
-    private Integer locationType;
+    @Schema(description = "协议类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "mqtt")
+    @InEnum(value = IotProtocolTypeEnum.class, message = "协议类型必须是 {value}")
+    @NotEmpty(message = "协议类型不能为空")
+    private String protocolType;
 
-    @Schema(description = "数据格式", requiredMode = Schema.RequiredMode.REQUIRED, example = "2")
-    @NotEmpty(message = "数据格式不能为空")
-    private String codecType;
+    @Schema(description = "序列化类型", requiredMode = Schema.RequiredMode.REQUIRED, example = "json")
+    @InEnum(value = IotSerializeTypeEnum.class, message = "序列化类型必须是 {value}")
+    @NotEmpty(message = "序列化类型不能为空")
+    private String serializeType;
+
+    @Schema(description = "是否开启动态注册", example = "false")
+    @NotNull(message = "是否开启动态注册不能为空")
+    private Boolean registerEnabled;
 
 }

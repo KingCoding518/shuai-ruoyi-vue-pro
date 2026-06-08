@@ -28,11 +28,15 @@ public interface IotDataRuleMapper extends BaseMapperX<IotDataRuleDO> {
 
     default List<IotDataRuleDO> selectListBySinkId(Long sinkId) {
         return selectList(new LambdaQueryWrapperX<IotDataRuleDO>()
-                .apply(MyBatisUtils.findInSet("sink_ids", sinkId)));
+                .apply(MyBatisUtils.findInSet("sink_ids"), sinkId));
     }
 
     default List<IotDataRuleDO> selectListByStatus(Integer status) {
         return selectList(IotDataRuleDO::getStatus, status);
+    }
+
+    default IotDataRuleDO selectByName(String name) {
+        return selectOne(IotDataRuleDO::getName, name);
     }
 
 }

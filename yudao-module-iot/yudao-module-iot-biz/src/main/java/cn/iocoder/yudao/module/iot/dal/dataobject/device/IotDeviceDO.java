@@ -4,7 +4,7 @@ import cn.iocoder.yudao.framework.mybatis.core.type.LongSetTypeHandler;
 import cn.iocoder.yudao.framework.tenant.core.db.TenantBaseDO;
 import cn.iocoder.yudao.module.iot.dal.dataobject.ota.IotOtaFirmwareDO;
 import cn.iocoder.yudao.module.iot.dal.dataobject.product.IotProductDO;
-import cn.iocoder.yudao.module.iot.core.enums.IotDeviceStateEnum;
+import cn.iocoder.yudao.module.iot.core.enums.device.IotDeviceStateEnum;
 import com.baomidou.mybatisplus.annotation.KeySequence;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -109,10 +109,6 @@ public class IotDeviceDO extends TenantBaseDO {
     private LocalDateTime activeTime;
 
     /**
-     * 设备的 IP 地址
-     */
-    private String ip;
-    /**
      * 固件编号
      *
      * 关联 {@link IotOtaFirmwareDO#getId()}
@@ -123,18 +119,7 @@ public class IotDeviceDO extends TenantBaseDO {
      * 设备密钥，用于设备认证
      */
     private String deviceSecret;
-    /**
-     * 认证类型（如一机一密、动态注册）
-     */
-    // TODO @haohao：是不是要枚举哈
-    private String authType;
 
-    /**
-     * 定位方式
-     * <p>
-     * 枚举 {@link cn.iocoder.yudao.module.iot.enums.product.IotLocationTypeEnum}
-     */
-    private Integer locationType;
     /**
      * 设备位置的纬度
      */
@@ -143,16 +128,6 @@ public class IotDeviceDO extends TenantBaseDO {
      * 设备位置的经度
      */
     private BigDecimal longitude;
-    /**
-     * 地区编码
-     * <p>
-     * 关联 Area 的 id
-     */
-    private Integer areaId;
-    /**
-     * 设备详细地址
-     */
-    private String address;
 
     /**
      * 设备配置

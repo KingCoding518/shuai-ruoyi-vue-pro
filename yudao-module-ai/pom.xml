@@ -19,9 +19,9 @@
           国外：OpenAI、Ollama、Midjourney、StableDiffusion、Suno
     </description>
     <properties>
-        <spring-ai.version>1.1.2</spring-ai.version>
+        <spring-ai.version>1.1.5</spring-ai.version>
         <!-- https://mvnrepository.com/artifact/com.alibaba.cloud.ai/spring-ai-alibaba -->
-        <alibaba-ai.version>1.1.0.0-RC2</alibaba-ai.version>
+        <alibaba-ai.version>1.1.2.2</alibaba-ai.version>
         <tinyflow.version>1.2.6</tinyflow.version>
     </properties>
 
@@ -204,6 +204,12 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
             <version>${spring-ai.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.swagger.core.v3</groupId>
+                    <artifactId>swagger-annotations-jakarta</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <!-- 客户端 -->

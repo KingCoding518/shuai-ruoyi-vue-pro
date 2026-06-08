@@ -1,6 +1,7 @@
 package cn.iocoder.yudao.module.trade.service.price.calculator;
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.util.collection.CollectionUtils;
 import cn.iocoder.yudao.module.product.api.sku.dto.ProductSkuRespDTO;
@@ -61,7 +62,7 @@ public class TradePriceCalculatorHelper {
             // spu 信息
             orderItem.setSpuName(spu.getName()).setCategoryId(spu.getCategoryId())
                     .setDeliveryTypes(spu.getDeliveryTypes()).setDeliveryTemplateId(spu.getDeliveryTemplateId())
-                    .setGivePoint(spu.getGiveIntegral()).setUsePoint(0);
+                    .setGivePoint(ObjectUtil.defaultIfNull(spu.getGiveIntegral(), 0)).setUsePoint(0);
             if (StrUtil.isBlank(orderItem.getPicUrl())) {
                 orderItem.setPicUrl(spu.getPicUrl());
             }
@@ -258,7 +259,7 @@ public class TradePriceCalculatorHelper {
             TradeOrderItemDO orderItem = items.get(i);
             int partPrice;
             if (i < items.size() - 1) { // 减一的原因，是因为拆分时，如果按照比例，可能会出现.所以最后一个，使用反减
-                partPrice = (int) (price * (1.0D * orderItem.getPrice() / total));
+                partPrice = (int) (price * (1.0D * orderItem.getPayPrice() / total));
                 remainPrice -= partPrice;
             } else {
                 partPrice = remainPrice;

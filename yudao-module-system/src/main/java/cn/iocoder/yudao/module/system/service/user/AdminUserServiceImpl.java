@@ -25,6 +25,7 @@ import cn.iocoder.yudao.module.system.dal.dataobject.dept.UserPostDO;
 import cn.iocoder.yudao.module.system.dal.dataobject.user.AdminUserDO;
 import cn.iocoder.yudao.module.system.dal.mysql.dept.UserPostMapper;
 import cn.iocoder.yudao.module.system.dal.mysql.user.AdminUserMapper;
+import cn.iocoder.yudao.module.system.mq.producer.user.AdminUserProducer;
 import cn.iocoder.yudao.module.system.service.dept.DeptService;
 import cn.iocoder.yudao.module.system.service.dept.PostService;
 import cn.iocoder.yudao.module.system.service.oauth2.OAuth2TokenService;
@@ -44,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.framework.common.util.collection.CollectionUtils.*;
@@ -86,6 +88,9 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Resource
     private ConfigApi configApi;
+
+    @Resource
+    private AdminUserProducer adminUserProducer;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -157,6 +162,8 @@ public class AdminUserServiceImpl implements AdminUserService {
         userMapper.updateById(updateObj);
         // 2.2 更新岗位
         updateUserPost(updateReqVO, updateObj);
+        // 2.3 昵称 / 头像变化时，发送消息供下游订阅（如 IM 模块推 FRIEND_INFO_UPDATED）
+        publishUserProfileUpdatedIfChanged(oldUser, updateReqVO.getNickname(), updateReqVO.getAvatar());
 
         // 3. 记录操作日志上下文
         LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(oldUser, UserSaveReqVO.class));
@@ -187,12 +194,30 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     public void updateUserProfile(Long id, UserProfileUpdateReqVO reqVO) {
-        // 校验正确性
-        validateUserExists(id);
+        // 1. 校验正确性
+        AdminUserDO oldUser = validateUserExists(id);
         validateEmailUnique(id, reqVO.getEmail());
         validateMobileUnique(id, reqVO.getMobile());
-        // 执行更新
+
+        // 2. 执行更新
         userMapper.updateById(BeanUtils.toBean(reqVO, AdminUserDO.class).setId(id));
+
+        // 3. 昵称 / 头像变化时，发送消息供下游订阅（如 IM 模块推 FRIEND_INFO_UPDATED）
+        publishUserProfileUpdatedIfChanged(oldUser, reqVO.getNickname(), reqVO.getAvatar());
+    }
+
+    /**
+     * 仅当 nickname 或 avatar 跟旧值不一致时，发送 AdminUserProfileUpdateMessage
+     */
+    private void publishUserProfileUpdatedIfChanged(AdminUserDO oldUser, String newNickname, String newAvatar) {
+        boolean nicknameChanged = newNickname != null && !ObjUtil.equal(oldUser.getNickname(), newNickname);
+        boolean avatarChanged = newAvatar != null && !ObjUtil.equal(oldUser.getAvatar(), newAvatar);
+        if (!nicknameChanged && !avatarChanged) {
+            return;
+        }
+        adminUserProducer.sendUserProfileUpdateMessage(oldUser.getId(),
+                nicknameChanged ? newNickname : null,
+                avatarChanged ? newAvatar : null);
     }
 
     @Override
@@ -284,11 +309,14 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public PageResult<AdminUserDO> getUserPage(UserPageReqVO reqVO) {
         // 如果有角色编号，查询角色对应的用户编号
-        Set<Long> userIds = reqVO.getRoleId() != null ?
-                permissionService.getUserRoleIdListByRoleId(singleton(reqVO.getRoleId())) : null;
-        if (userIds != null && userIds.isEmpty()) {
-            return PageResult.empty();
+        Set<Long> userIds = null;
+        if (reqVO.getRoleId() != null) {
+            userIds = permissionService.getUserRoleIdListByRoleId(singleton(reqVO.getRoleId()));
+            if (CollUtil.isEmpty(userIds)) {
+                return PageResult.empty();
+            }
         }
+
         // 分页查询
         return userMapper.selectPage(reqVO, getDeptCondition(reqVO.getDeptId()), userIds);
     }
@@ -325,6 +353,11 @@ public class AdminUserServiceImpl implements AdminUserService {
         }
         return userMapper.selectByIds(ids);
     }
+
+    public List<AdminUserDO> getUserListAll() {
+        return userMapper.selectList();
+    }
+
 
     @Override
     public void validateUserList(Collection<Long> ids) {
@@ -484,12 +517,15 @@ public class AdminUserServiceImpl implements AdminUserService {
         // 2. 遍历，逐个创建 or 更新
         UserImportRespVO respVO = UserImportRespVO.builder().createUsernames(new ArrayList<>())
                 .updateUsernames(new ArrayList<>()).failureUsernames(new LinkedHashMap<>()).build();
+        AtomicInteger index = new AtomicInteger(1);
         importUsers.forEach(importUser -> {
+            int currentIndex = index.getAndIncrement();
             // 2.1.1 校验字段是否符合要求
             try {
                 ValidationUtils.validate(BeanUtils.toBean(importUser, UserSaveReqVO.class).setPassword(initPassword));
-            } catch (ConstraintViolationException ex){
-                respVO.getFailureUsernames().put(importUser.getUsername(), ex.getMessage());
+            } catch (ConstraintViolationException ex) {
+                String key = StrUtil.blankToDefault(importUser.getUsername(), "第 " + currentIndex + " 行");
+                respVO.getFailureUsernames().put(key, ex.getMessage());
                 return;
             }
             // 2.1.2 校验，判断是否有不符合的原因
@@ -525,6 +561,11 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public List<AdminUserDO> getUserListByStatus(Integer status) {
         return userMapper.selectListByStatus(status);
+    }
+
+    @Override
+    public List<AdminUserDO> getDeptUsers(Collection<Long> deptIds) {
+        return userMapper.selectListByDeptIds(deptIds);
     }
 
     @Override

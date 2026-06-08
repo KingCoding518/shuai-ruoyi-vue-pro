@@ -6,6 +6,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
+import cn.iocoder.yudao.framework.common.exception.ServiceException;
 import cn.iocoder.yudao.framework.common.exception.enums.GlobalErrorCodeConstants;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.date.DateUtils;
@@ -68,7 +69,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(noRollbackFor = ServiceException.class)
     public OAuth2AccessTokenDO refreshAccessToken(String refreshToken, String clientId) {
         // 查询访问令牌
         OAuth2RefreshTokenDO refreshTokenDO = oauth2RefreshTokenMapper.selectByRefreshToken(refreshToken);
@@ -150,6 +151,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
         oauth2AccessTokenRedisDAO.delete(accessToken);
         // 删除刷新令牌
         oauth2RefreshTokenMapper.deleteByRefreshToken(accessTokenDO.getRefreshToken());
+        oauth2AccessTokenRedisDAO.delete(accessTokenDO.getRefreshToken());
         return accessTokenDO;
     }
 
@@ -165,6 +167,7 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
             oauth2AccessTokenRedisDAO.delete(accessToken.getAccessToken());
             // 删除刷新令牌
             oauth2RefreshTokenMapper.deleteByRefreshToken(accessToken.getRefreshToken());
+            oauth2AccessTokenRedisDAO.delete(accessToken.getRefreshToken());
         });
     }
 
@@ -240,4 +243,35 @@ public class OAuth2TokenServiceImpl implements OAuth2TokenService {
         return IdUtil.fastSimpleUUID();
     }
 
+    @Override
+    public Integer cleanRefreshToken(Integer exceedDay, Integer deleteLimit) {
+        int count = 0;
+        LocalDateTime expireDate = LocalDateTime.now().minusDays(exceedDay);
+        // 循环删除，直到没有满足条件的数据
+        for (int i = 0; i < Short.MAX_VALUE; i++) {
+            int deleteCount = oauth2RefreshTokenMapper.deleteByExpiresTimeLt(expireDate, deleteLimit);
+            count += deleteCount;
+            // 达到删除预期条数，说明到底了
+            if (deleteCount < deleteLimit) {
+                break;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public Integer cleanAccessToken(Integer exceedDay, Integer deleteLimit) {
+        int count = 0;
+        LocalDateTime expireDate = LocalDateTime.now().minusDays(exceedDay);
+        // 循环删除，直到没有满足条件的数据
+        for (int i = 0; i < Short.MAX_VALUE; i++) {
+            int deleteCount = oauth2AccessTokenMapper.deleteByExpiresTimeLt(expireDate, deleteLimit);
+            count += deleteCount;
+            // 达到删除预期条数，说明到底了
+            if (deleteCount < deleteLimit) {
+                break;
+            }
+        }
+        return count;
+    }
 }
