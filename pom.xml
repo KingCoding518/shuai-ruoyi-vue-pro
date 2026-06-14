@@ -28,7 +28,7 @@
 <!--        <module>yudao-module-wms</module>-->
 <!--        <module>yudao-module-im</module>-->
 <!-- 请参考 https://doc.iocoder.cn/ai/build/ 文档，完成 AI 模块的启动！！！ -->
-<!--        <module>yudao-module-ai</module>-->
+        <module>yudao-module-ai</module>
     </modules>
 
     <name>${project.artifactId}</name>
@@ -149,17 +149,17 @@
     </build>
 
     <!-- 使用 huawei / aliyun 的 Maven 源，提升下载速度 -->
-    <repositories>
-        <repository>
-            <id>huaweicloud</id>
-            <name>huawei</name>
-            <url>https://mirrors.huaweicloud.com/repository/maven/</url>
-        </repository>
-        <repository>
-            <id>aliyunmaven</id>
-            <name>aliyun</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-        </repository>
-    </repositories>
+    <!--<repositories>-->
+    <!--    <repository>-->
+    <!--        <id>huaweicloud</id>-->
+    <!--        <name>huawei</name>-->
+    <!--        <url>https://mirrors.huaweicloud.com/repository/maven/</url>-->
+    <!--    </repository>-->
+    <!--    <repository>-->
+    <!--        <id>aliyunmaven</id>-->
+    <!--        <name>aliyun</name>-->
+    <!--        <url>https://maven.aliyun.com/repository/public</url>-->
+    <!--    </repository>-->
+    <!--</repositories>-->
 
 </project>

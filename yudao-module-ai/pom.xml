@@ -74,6 +74,13 @@
             <artifactId>yudao-spring-boot-starter-excel</artifactId>
         </dependency>
 
+        <!--引入 langchain4j 接入-->
+        <!--按需引入 使用langchain4j 的分片功能-->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+        </dependency>
+
         <!-- Spring AI Model 模型接入 -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
