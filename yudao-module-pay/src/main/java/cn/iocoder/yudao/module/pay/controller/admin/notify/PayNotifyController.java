@@ -60,6 +60,15 @@ public class PayNotifyController {
     @Resource
     private PayChannelService channelService;
 
+    /**
+     * 兼容 微信和支付宝的回调请求
+     * 注意：目前测试得知在如果这样接受参数的话，会存在params和body，都会有值，只不过接受的值是相同的，只是形式不同
+     * @param channelId 渠道编号
+     * @param params 支付宝回调参数
+     * @param body  微信回调参数
+     * @param headers 回调携带的请求头，微信支付携带
+     * @return
+     */
     @PostMapping(value = "/order/{channelId}")
     @Operation(summary = "支付渠道的统一【支付】回调")
     @PermitAll
@@ -68,7 +77,7 @@ public class PayNotifyController {
                               @RequestParam(required = false) Map<String, String> params,
                               @RequestBody(required = false) String body,
                               @RequestHeader Map<String, String> headers) {
-        log.info("[notifyOrder][channelId({}) 回调数据({}/{})]", channelId, params, body);
+        log.info("[notifyOrder][channelId({}) 回调数据({}或者{})]", channelId, params, body);
         // 1. 校验支付渠道是否存在
         PayClient payClient = channelService.getPayClient(channelId);
         if (payClient == null) {
