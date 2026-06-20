@@ -11,6 +11,7 @@ import org.springframework.amqp.core.MessagePostProcessor;
 public class BasicIdMessageProcessor implements MessagePostProcessor {
     @Override
     public Message postProcessMessage(Message message) throws AmqpException {
+        // requestId做的事情：把一次调用链中所有参与方的日志串联起
         String requestId = MDC.get(RabbitMqConstants.REQUEST_ID_HEADER);
         if (requestId == null) {
             requestId = UUID.randomUUID().toString(true);

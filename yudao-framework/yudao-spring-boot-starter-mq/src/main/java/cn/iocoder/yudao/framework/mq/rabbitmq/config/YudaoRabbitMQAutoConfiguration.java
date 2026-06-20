@@ -109,6 +109,7 @@ public class YudaoRabbitMQAutoConfiguration implements EnvironmentAware {
 
     /**
      * 专门接收处理失败的消息
+     * 项目运行的时候就创建 处理错误的交换机、队列，并且绑定关系
      */
     @Bean
     public DirectExchange errorMessageExchange() {

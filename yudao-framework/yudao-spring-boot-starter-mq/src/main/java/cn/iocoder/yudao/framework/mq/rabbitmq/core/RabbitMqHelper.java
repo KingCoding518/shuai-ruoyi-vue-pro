@@ -22,6 +22,8 @@ public class RabbitMqHelper {
 
     public RabbitMqHelper(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+
+        // 该线程池是为了下面异步使用的，借助构造方法初始化一下
         executor = new ThreadPoolTaskExecutor();
         //配置核心线程数
         executor.setCorePoolSize(10);
@@ -44,6 +46,11 @@ public class RabbitMqHelper {
      */
     public <T> void send(String exchange, String routingKey, T t) {
         log.debug("准备发送消息，exchange：{}， RoutingKey：{}， message：{}", exchange, routingKey,t);
+        /**
+         * 下面这个操作是为了保证消费者与broker之前消息的可靠性的
+         * 但是没有做到真正的ack确认，基本上写的无用
+         * 与直接发送消息一样
+         */
         // 1.设置消息标示，用于消息确认，消息发送失败直接抛出异常，交给调用者处理
         String id = UUID.randomUUID().toString(true);
         CorrelationData correlationData = new CorrelationData(id);
