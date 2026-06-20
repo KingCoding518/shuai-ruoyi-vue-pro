@@ -125,10 +125,17 @@ rocketmq:
 spring:
   # RabbitMQ 配置项，对应 RabbitProperties 配置类
   rabbitmq:
-    host: 127.0.0.1 # RabbitMQ 服务的地址
-    port: 5672 # RabbitMQ 服务的端口
-    username: rabbit # RabbitMQ 服务的账号
-    password: rabbit # RabbitMQ 服务的密码
+    addresses: 127.0.0.1:5672,127.0.0.1:5673,127.0.0.1:5674
+    username: rabbitmq # RabbitMQ 服务的账号
+    password: rabbitmqadmin # RabbitMQ 服务的密码
+    listener:
+      simple:
+        retry:
+          enabled: true # 开启消费者失败重试
+          initial-interval: 1000ms # 初始的失败等待时长为1秒
+          multiplier: 2 # 失败的等待时长倍数，下次等待时长 = multiplier * last-interval
+          max-attempts: 3 # 最大重试次数
+          stateless: true # true无状态；false有状态。如果
   # Kafka 配置项，对应 KafkaProperties 配置类
   kafka:
     bootstrap-servers: 127.0.0.1:9192,127.0.0.1:9292,127.0.0.1:9392
